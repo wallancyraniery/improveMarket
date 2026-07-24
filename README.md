@@ -149,7 +149,8 @@ Scripts that need writable project-scoped home, npm, XDG, and temporary paths us
 - `db/index.ts` reads the D1 binding from the Cloudflare Worker environment
 - `db/schema.ts` starts intentionally empty
 - `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
+- `drizzle.config.ts` loads the local `.env`, validates the database environment,
+  and gives Drizzle Kit only `MIGRATION_DATABASE_URL` for PostgreSQL migrations
 
 ## Workspace Auth Headers
 
@@ -218,7 +219,8 @@ actions tied to the current ChatGPT user. Leave public content anonymous.
 - `npm run start`: start the built Vinext application
 - `npm test`: build, validate, and verify the rendered development-preview metadata
 - `npm run validate:artifact`: recheck an existing artifact's manifest and ESM `default.fetch` export
-- `npm run db:generate`: generate Drizzle migrations after schema changes
+- `npm run db:generate`: generate PostgreSQL migrations after schema changes;
+  Drizzle Kit loads `.env` and uses only `MIGRATION_DATABASE_URL`
 
 Use build and validation commands for targeted diagnosis after a remote failure, not as part of the normal checkpoint path.
 

@@ -46,6 +46,63 @@ npm ci
 npm run dev
 ```
 
+## PostgreSQL e PostGIS locais
+
+Este ambiente é somente para desenvolvimento local. Ele não configura banco de
+produção, provedor remoto ou Cloudflare Hyperdrive.
+
+Pré-requisitos:
+
+1. Docker Engine com o plugin Docker Compose.
+2. Porta `5432` disponível em `127.0.0.1`.
+
+Crie o arquivo local de ambiente a partir dos valores demonstrativos:
+
+```bash
+# Linux e macOS
+cp .env.example .env
+
+# Windows PowerShell
+Copy-Item .env.example .env
+```
+
+Antes de iniciar o serviço, substitua a senha demonstrativa em `.env` por uma
+senha local própria. O arquivo `.env` é ignorado pelo Git e não deve ser
+versionado.
+
+Inicie o banco em segundo plano:
+
+```bash
+docker compose up -d
+```
+
+Verifique o estado e aguarde até o serviço aparecer como `healthy`:
+
+```bash
+docker compose ps
+```
+
+Para visualizar os logs:
+
+```bash
+docker compose logs -f postgres
+```
+
+Para parar e remover os contêineres sem apagar os dados persistidos:
+
+```bash
+docker compose down
+```
+
+Para apagar deliberadamente também o volume de dados:
+
+```bash
+docker compose down --volumes
+```
+
+**Atenção:** a opção `--volumes` apaga de forma destrutiva todos os dados do
+PostgreSQL armazenados no volume deste projeto.
+
 ---
 
 ## Infraestrutura de hospedagem

@@ -1,0 +1,9 @@
+| Camada           | Responsabilidade                                       |
+| ---------------- | ------------------------------------------------------ |
+| `app`            | Rotas e composição inicial                             |
+| `components`     | Componentes compartilháveis da IMPROVE                 |
+| `domain`         | Tipos e regras do negócio                              |
+| `data`           | Dados provisórios e futuramente repositórios           |
+| `ui/components`  | Componentes específicos do marketplace                 |
+| `ui/sections`    | Seções completas das telas                             |
+| `infrastructure` | Hospedagem, autenticação, banco e integrações externas |

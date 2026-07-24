@@ -68,7 +68,15 @@ Copy-Item .env.example .env
 
 Antes de iniciar o serviço, substitua a senha demonstrativa em `.env` por uma
 senha local própria. O arquivo `.env` é ignorado pelo Git e não deve ser
-versionado.
+versionado. Atualize também `DATABASE_URL` e `MIGRATION_DATABASE_URL` com o
+mesmo usuário, senha, host, porta e banco definidos pelas variáveis
+`POSTGRES_*`. As URLs aceitam os protocolos `postgres:` e `postgresql:`.
+
+No desenvolvimento local, as duas URLs podem apontar para o mesmo banco e usar
+a mesma credencial. Em produção, a credencial de runtime indicada por
+`DATABASE_URL` deverá ter privilégios mínimos, enquanto a credencial separada
+de `MIGRATION_DATABASE_URL` deverá ter os privilégios adicionais necessários
+para executar migrations. O provedor de produção ainda não está definido.
 
 Inicie o banco em segundo plano:
 

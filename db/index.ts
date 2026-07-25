@@ -1,13 +1,48 @@
-import { env } from "cloudflare:workers";
-import { drizzle } from "drizzle-orm/d1";
+import "server-only";
+
+import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
+
+import { getDatabaseEnvironment } from "../src/config/database-env.server";
 import * as schema from "./schema";
 
-export function getDb() {
-  if (!env.DB) {
-    throw new Error(
-      "Cloudflare D1 binding `DB` is unavailable. Set the `d1` field in .openai/hosting.json to `DB` or let your control plane inject the real binding values before using the database."
-    );
-  }
+const databasePoolKey = Symbol.for("improve.databasePool");
+const drizzleDatabaseKey = Symbol.for("improve.drizzleDatabase");
 
-  return drizzle(env.DB, { schema });
+type Database = NodePgDatabase<typeof schema>;
+type DatabaseGlobals = typeof globalThis & {
+  [databasePoolKey]?: Pool;
+  [drizzleDatabaseKey]?: Database;
+};
+
+const databaseGlobals = globalThis as DatabaseGlobals;
+
+export function getDatabasePool(): Pool {
+  databaseGlobals[databasePoolKey] ??= new Pool({
+    connectionString: getDatabaseEnvironment().DATABASE_URL,
+    max: 5,
+    connectionTimeoutMillis: 5_000,
+    idleTimeoutMillis: 10_000,
+  });
+
+  return databaseGlobals[databasePoolKey];
+}
+
+export function getDb(): Database {
+  databaseGlobals[drizzleDatabaseKey] ??= drizzle(getDatabasePool(), {
+    schema,
+  });
+
+  return databaseGlobals[drizzleDatabaseKey];
+}
+
+export async function closeDatabasePool(): Promise<void> {
+  const pool = databaseGlobals[databasePoolKey];
+
+  delete databaseGlobals[drizzleDatabaseKey];
+  delete databaseGlobals[databasePoolKey];
+
+  if (pool) {
+    await pool.end();
+  }
 }

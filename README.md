@@ -146,7 +146,9 @@ Scripts that need writable project-scoped home, npm, XDG, and temporary paths us
   identity integration supplied by the current hosting platform
 - `.openai/hosting.json` declares optional Sites D1 and R2 bindings
 - `vite.config.ts` simulates declared bindings for local development
-- `db/index.ts` reads the D1 binding from the Cloudflare Worker environment
+- `db/index.ts` provides a lazy PostgreSQL Pool and Drizzle adapter using only
+  `DATABASE_URL`; it limits the Pool to 5 connections, waits up to 5 seconds to
+  connect, and releases idle connections after 10 seconds
 - `db/schema.ts` starts intentionally empty
 - `examples/d1/` contains an optional D1 example surface
 - `drizzle.config.ts` loads the local `.env`, validates the database environment,
@@ -221,8 +223,14 @@ actions tied to the current ChatGPT user. Leave public content anonymous.
 - `npm run validate:artifact`: recheck an existing artifact's manifest and ESM `default.fetch` export
 - `npm run db:generate`: generate PostgreSQL migrations after schema changes;
   Drizzle Kit loads `.env` and uses only `MIGRATION_DATABASE_URL`
+- `npm run db:check`: validate the local PostgreSQL connection, `SELECT 1`,
+  PostgreSQL version, and PostGIS availability without exposing credentials
 
 Use build and validation commands for targeted diagnosis after a remote failure, not as part of the normal checkpoint path.
+
+The production PostgreSQL transport remains undecided. Cloudflare deployment
+may require `nodejs_compat` and Hyperdrive depending on the chosen provider;
+neither is configured by the generic local adapter.
 
 The timeout defaults can be overridden for a controlled canary with `SITES_INSTALL_TIMEOUT`, `SITES_INSTALL_KILL_AFTER`, `SITES_BUILD_TIMEOUT`, and `SITES_BUILD_KILL_AFTER`. A timeout fails the command; the helpers never retry an unchanged install or build.
 

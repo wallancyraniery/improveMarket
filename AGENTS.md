@@ -18,7 +18,7 @@ O nome definitivo do marketplace ainda será escolhido. Não renomeie o produto 
 - `src/modules/marketplace/data/`: dados demonstrativos, adaptadores e implementações de acesso a dados do módulo.
 - `src/modules/marketplace/ui/`: páginas internas, seções e componentes de interface do marketplace.
 - `public/`: arquivos estáticos; o símbolo oficial da IMPROVE está em `public/brand/improve-symbol-transparent.png`.
-- `db/`, `drizzle/` e `examples/d1/`: estrutura preparada e exemplos de persistência. O Drizzle Kit usa PostgreSQL e `MIGRATION_DATABASE_URL`; o adaptador runtime D1 permanece inalterado até decisão explícita. Não ativar ou expandir banco de dados sem solicitação explícita.
+- `db/`, `drizzle/` e `examples/d1/`: estrutura preparada e exemplos de persistência. O Drizzle Kit usa PostgreSQL e `MIGRATION_DATABASE_URL`; o adaptador runtime usa PostgreSQL e `DATABASE_URL`. Os exemplos D1 permanecem isolados. Não ativar ou expandir banco de dados sem solicitação explícita.
 - `build/`, `worker/` e `scripts/`: integração de build, worker e automações do projeto.
 - `tests/`: testes automatizados.
 

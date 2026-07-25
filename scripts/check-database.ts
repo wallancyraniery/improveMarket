@@ -10,6 +10,10 @@ type VersionRow = {
   version: string;
 };
 
+type CountRow = {
+  count: number;
+};
+
 async function checkDatabase(): Promise<void> {
   loadEnvFile();
 
@@ -22,6 +26,26 @@ async function checkDatabase(): Promise<void> {
     const postgisVersion = await pool.query<VersionRow>(
       "SELECT PostGIS_Full_Version() AS version",
     );
+    const migrationCount = await pool.query<CountRow>(
+      "SELECT COUNT(*)::integer AS count FROM drizzle.__drizzle_migrations",
+    );
+    const businessTables = await pool.query(
+      `SELECT 1
+       FROM pg_class AS relation
+       INNER JOIN pg_namespace AS namespace
+         ON namespace.oid = relation.relnamespace
+       WHERE relation.relkind = 'r'
+         AND namespace.nspname NOT IN ('pg_catalog', 'information_schema', 'drizzle')
+         AND namespace.nspname NOT LIKE 'pg_toast%'
+         AND NOT EXISTS (
+           SELECT 1
+           FROM pg_depend AS dependency
+           WHERE dependency.classid = 'pg_class'::regclass
+             AND dependency.objid = relation.oid
+             AND dependency.deptype = 'e'
+         )
+       LIMIT 1`,
+    );
 
     if (connection.rows[0]?.result !== 1) {
       throw new Error("Database readiness query returned an unexpected result.");
@@ -29,15 +53,22 @@ async function checkDatabase(): Promise<void> {
 
     const databaseVersion = postgresVersion.rows[0]?.version;
     const spatialVersion = postgisVersion.rows[0]?.version;
+    const appliedMigrations = migrationCount.rows[0]?.count;
 
-    if (!databaseVersion || !spatialVersion) {
+    if (!databaseVersion || !spatialVersion || !appliedMigrations) {
       throw new Error("Database version information is unavailable.");
+    }
+
+    if (businessTables.rowCount !== 0) {
+      throw new Error("Unexpected business tables were found.");
     }
 
     console.log("Database connection: ok");
     console.log("SELECT 1: ok");
     console.log(`PostgreSQL version: ${databaseVersion}`);
     console.log(`PostGIS availability: ${spatialVersion}`);
+    console.log(`Drizzle migrations registered: ${appliedMigrations}`);
+    console.log("Business tables: none");
   } finally {
     await closeDatabasePool();
   }

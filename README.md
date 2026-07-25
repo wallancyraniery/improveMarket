@@ -223,8 +223,11 @@ actions tied to the current ChatGPT user. Leave public content anonymous.
 - `npm run validate:artifact`: recheck an existing artifact's manifest and ESM `default.fetch` export
 - `npm run db:generate`: generate PostgreSQL migrations after schema changes;
   Drizzle Kit loads `.env` and uses only `MIGRATION_DATABASE_URL`
+- `npm run db:migrate`: deliberately apply pending PostgreSQL migrations using
+  only `MIGRATION_DATABASE_URL`; migrations never run during application startup
 - `npm run db:check`: validate the local PostgreSQL connection, `SELECT 1`,
-  PostgreSQL version, and PostGIS availability without exposing credentials
+  PostgreSQL version, PostGIS availability, registered migrations, and absence
+  of business tables without exposing credentials
 
 Use build and validation commands for targeted diagnosis after a remote failure, not as part of the normal checkpoint path.
 

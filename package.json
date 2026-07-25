@@ -14,6 +14,7 @@
     "validate:artifact": "node scripts/validate-artifact.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
     "db:check": "node --conditions=react-server --import tsx scripts/check-database.ts"
   },
   "dependencies": {

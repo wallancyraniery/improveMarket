@@ -25,7 +25,9 @@ const expectedBusinessTables = [
 ] as const;
 
 async function checkDatabase(): Promise<void> {
-  loadEnvFile();
+  if (!process.env.DATABASE_URL) {
+    loadEnvFile();
+  }
 
   try {
     const pool = getDatabasePool();

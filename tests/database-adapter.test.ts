@@ -13,8 +13,7 @@ const runtimeDatabaseUrl =
   "postgresql://runtime_user:runtime_password@127.0.0.1:5432/runtime_database";
 
 process.env.DATABASE_URL = runtimeDatabaseUrl;
-process.env.MIGRATION_DATABASE_URL =
-  "postgresql://migration_user:migration_password@127.0.0.1:5432/migration_database";
+delete process.env.MIGRATION_DATABASE_URL;
 
 after(async () => {
   await closeDatabasePool();
@@ -38,14 +37,11 @@ test("creates lazy singleton Pool and Drizzle instances", () => {
   assert.equal(firstPool.options.idleTimeoutMillis, 10_000);
 });
 
-test("uses DATABASE_URL instead of MIGRATION_DATABASE_URL at runtime", () => {
+test("uses only DATABASE_URL at runtime", () => {
   const pool = getDatabasePool();
 
   assert.equal(pool.options.connectionString, runtimeDatabaseUrl);
-  assert.notEqual(
-    pool.options.connectionString,
-    process.env.MIGRATION_DATABASE_URL,
-  );
+  assert.equal(process.env.MIGRATION_DATABASE_URL, undefined);
 });
 
 test("closes and clears database resources and allows recreation", async () => {

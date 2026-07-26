@@ -3,7 +3,7 @@ import "server-only";
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 
-import { getDatabaseEnvironment } from "../src/config/database-env.server";
+import { getRuntimeDatabaseEnvironment } from "../src/config/database-env.server";
 import * as schema from "./schema";
 
 const databasePoolKey = Symbol.for("improve.databasePool");
@@ -19,7 +19,7 @@ const databaseGlobals = globalThis as DatabaseGlobals;
 
 export function getDatabasePool(): Pool {
   databaseGlobals[databasePoolKey] ??= new Pool({
-    connectionString: getDatabaseEnvironment().DATABASE_URL,
+    connectionString: getRuntimeDatabaseEnvironment().DATABASE_URL,
     max: 5,
     connectionTimeoutMillis: 5_000,
     idleTimeoutMillis: 10_000,

@@ -77,6 +77,8 @@ a mesma credencial. Em produção, a credencial de runtime indicada por
 `DATABASE_URL` deverá ter privilégios mínimos, enquanto a credencial separada
 de `MIGRATION_DATABASE_URL` deverá ter os privilégios adicionais necessários
 para executar migrations. O provedor de produção ainda não está definido.
+O runtime exige somente `DATABASE_URL`; o Drizzle Kit exige somente
+`MIGRATION_DATABASE_URL`.
 
 Inicie o banco em segundo plano:
 
@@ -149,7 +151,8 @@ Scripts that need writable project-scoped home, npm, XDG, and temporary paths us
 - `db/index.ts` provides a lazy PostgreSQL Pool and Drizzle adapter using only
   `DATABASE_URL`; it limits the Pool to 5 connections, waits up to 5 seconds to
   connect, and releases idle connections after 10 seconds
-- `db/schema.ts` starts intentionally empty
+- `db/schema.ts` exports the initial `users`, `organizations`, and
+  `organization_members` schemas
 - `examples/d1/` contains an optional D1 example surface
 - `drizzle.config.ts` loads the local `.env`, validates the database environment,
   and gives Drizzle Kit only `MIGRATION_DATABASE_URL` for PostgreSQL migrations
@@ -226,8 +229,9 @@ actions tied to the current ChatGPT user. Leave public content anonymous.
 - `npm run db:migrate`: deliberately apply pending PostgreSQL migrations using
   only `MIGRATION_DATABASE_URL`; migrations never run during application startup
 - `npm run db:check`: validate the local PostgreSQL connection, `SELECT 1`,
-  PostgreSQL version, PostGIS availability, registered migrations, and absence
-  of business tables without exposing credentials
+  PostgreSQL version, PostGIS availability, registered migrations, and the
+  expected `users`, `organizations`, and `organization_members` tables without
+  exposing credentials
 
 Use build and validation commands for targeted diagnosis after a remote failure, not as part of the normal checkpoint path.
 

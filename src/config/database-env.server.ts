@@ -1,14 +1,15 @@
 import "server-only";
 
 import {
-  parseDatabaseEnvironment,
-  type DatabaseEnvironment,
+  parseRuntimeDatabaseEnvironment,
+  type RuntimeDatabaseEnvironment,
 } from "./database-env";
 
-let cachedDatabaseEnvironment: DatabaseEnvironment | undefined;
+let cachedRuntimeDatabaseEnvironment: RuntimeDatabaseEnvironment | undefined;
 
-export function getDatabaseEnvironment(): DatabaseEnvironment {
-  cachedDatabaseEnvironment ??= parseDatabaseEnvironment(process.env);
+export function getRuntimeDatabaseEnvironment(): RuntimeDatabaseEnvironment {
+  cachedRuntimeDatabaseEnvironment ??=
+    parseRuntimeDatabaseEnvironment(process.env);
 
-  return cachedDatabaseEnvironment;
+  return cachedRuntimeDatabaseEnvironment;
 }

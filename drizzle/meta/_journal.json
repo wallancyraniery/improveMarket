@@ -1,5 +1,20 @@
 {
   "version": "7",
-  "dialect": "sqlite",
-  "entries": []
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1784950798354,
+      "tag": "0000_enable_postgis",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1785089725050,
+      "tag": "0001_create_identity_and_organizations",
+      "breakpoints": true
+    }
+  ]
 }

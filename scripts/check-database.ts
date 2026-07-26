@@ -14,6 +14,16 @@ type CountRow = {
   count: number;
 };
 
+type TableNameRow = {
+  tableName: string;
+};
+
+const expectedBusinessTables = [
+  "organization_members",
+  "organizations",
+  "users",
+] as const;
+
 async function checkDatabase(): Promise<void> {
   loadEnvFile();
 
@@ -29,8 +39,8 @@ async function checkDatabase(): Promise<void> {
     const migrationCount = await pool.query<CountRow>(
       "SELECT COUNT(*)::integer AS count FROM drizzle.__drizzle_migrations",
     );
-    const businessTables = await pool.query(
-      `SELECT 1
+    const businessTables = await pool.query<TableNameRow>(
+      `SELECT relation.relname AS "tableName"
        FROM pg_class AS relation
        INNER JOIN pg_namespace AS namespace
          ON namespace.oid = relation.relnamespace
@@ -44,7 +54,7 @@ async function checkDatabase(): Promise<void> {
              AND dependency.objid = relation.oid
              AND dependency.deptype = 'e'
          )
-       LIMIT 1`,
+       ORDER BY relation.relname`,
     );
 
     if (connection.rows[0]?.result !== 1) {
@@ -59,8 +69,17 @@ async function checkDatabase(): Promise<void> {
       throw new Error("Database version information is unavailable.");
     }
 
-    if (businessTables.rowCount !== 0) {
-      throw new Error("Unexpected business tables were found.");
+    const businessTableNames = businessTables.rows.map(
+      ({ tableName }) => tableName,
+    );
+
+    if (
+      businessTableNames.length !== expectedBusinessTables.length ||
+      businessTableNames.some(
+        (tableName, index) => tableName !== expectedBusinessTables[index],
+      )
+    ) {
+      throw new Error("The database business tables do not match the schema.");
     }
 
     console.log("Database connection: ok");
@@ -68,7 +87,7 @@ async function checkDatabase(): Promise<void> {
     console.log(`PostgreSQL version: ${databaseVersion}`);
     console.log(`PostGIS availability: ${spatialVersion}`);
     console.log(`Drizzle migrations registered: ${appliedMigrations}`);
-    console.log("Business tables: none");
+    console.log(`Business tables: ${businessTableNames.join(", ")}`);
   } finally {
     await closeDatabasePool();
   }

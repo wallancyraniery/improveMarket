@@ -113,6 +113,43 @@ docker compose down --volumes
 **Atenção:** a opção `--volumes` apaga de forma destrutiva todos os dados do
 PostgreSQL armazenados no volume deste projeto.
 
+### PostgreSQL descartável para testes de integração
+
+O serviço `postgres-test` é isolado do banco de desenvolvimento: usa somente
+`127.0.0.1:5433`, exige banco com sufixo `_test`, participa apenas do profile
+`test` e armazena dados em `tmpfs`. Atualize manualmente as quatro variáveis
+`TEST_*` no `.env` local antes de usar os comandos abaixo.
+
+Inicie e verifique somente o serviço de teste:
+
+```bash
+docker compose --profile test up -d postgres-test
+docker compose --profile test ps postgres-test
+```
+
+Prepare as migrations existentes e execute o diagnóstico somente leitura:
+
+```bash
+npm run db:test:prepare
+npm run db:test:check
+```
+
+Pare somente o serviço de teste:
+
+```bash
+docker compose --profile test stop postgres-test
+```
+
+Para apagar o ambiente descartável, remova somente esse contêiner. Como os
+dados usam `tmpfs`, não há volume de teste persistente a remover:
+
+```bash
+docker compose --profile test rm -f postgres-test
+```
+
+Não use `docker compose down --volumes` para esse fluxo, pois o comando também
+apagaria o volume persistente do PostgreSQL de desenvolvimento.
+
 ---
 
 ## Infraestrutura de hospedagem
@@ -232,6 +269,10 @@ actions tied to the current ChatGPT user. Leave public content anonymous.
   PostgreSQL version, PostGIS availability, registered migrations, and the
   expected `users`, `organizations`, and `organization_members` tables without
   exposing credentials
+- `npm run db:test:prepare`: valida `TEST_DATABASE_URL` e aplica as migrations
+  existentes exclusivamente no PostgreSQL descartável de testes
+- `npm run db:test:check`: valida e diagnostica somente o PostgreSQL de testes,
+  sem modificar dados nem expor credenciais
 
 Use build and validation commands for targeted diagnosis after a remote failure, not as part of the normal checkpoint path.
 

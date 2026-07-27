@@ -19,5 +19,26 @@ services:
       start_period: 10s
     restart: unless-stopped
 
+  postgres-test:
+    profiles:
+      - test
+    image: postgis/postgis:17-3.5
+    environment:
+      POSTGRES_DB: ${TEST_POSTGRES_DB:?TEST_POSTGRES_DB is required}
+      POSTGRES_USER: ${TEST_POSTGRES_USER:?TEST_POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${TEST_POSTGRES_PASSWORD:?TEST_POSTGRES_PASSWORD is required}
+    ports:
+      - "127.0.0.1:5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
 volumes:
   postgres_data:

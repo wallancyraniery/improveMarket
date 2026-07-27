@@ -134,6 +134,16 @@ npm run db:test:prepare
 npm run db:test:check
 ```
 
+Com o serviço preparado, execute separadamente os testes de integração reais:
+
+```bash
+npm run test:integration
+```
+
+Esse comando é opt-in, serial e não integra `npm test`. Ele não inicia Docker
+nem aplica migrations; conecta somente por `TEST_DATABASE_URL` após validar as
+proteções locais e remove apenas registros identificados pela própria execução.
+
 Pare somente o serviço de teste:
 
 ```bash

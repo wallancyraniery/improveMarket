@@ -32,6 +32,7 @@ Pré-requisito: Node.js `>=22.13.0` e npm compatível com o `package-lock.json`.
 - Validar lint: `npm run lint`
 - Gerar e validar o build: `npm run build`
 - Executar testes: `npm test`
+- Executar testes de integração opt-in: `npm run test:integration`
 - Preparar banco descartável de testes: `npm run db:test:prepare`
 - Diagnosticar banco descartável de testes: `npm run db:test:check`
 - Validar o artefato existente: `npm run validate:artifact`
@@ -64,6 +65,7 @@ Os comandos npm oficiais devem funcionar diretamente em Windows, Linux e macOS. 
 - Aplique segurança desde o início: valide entradas em fronteiras do sistema, limite dados expostos ao cliente, trate erros sem revelar detalhes internos e mantenha dependências e permissões no menor escopo necessário.
 - Nunca inclua segredos, tokens, senhas, chaves, credenciais, dados pessoais reais ou identificadores sensíveis no código, fixtures, logs, documentação ou histórico Git.
 - Comandos `db:test:*` usam exclusivamente `TEST_DATABASE_URL`, que deve apontar para host local, porta `5433` e banco terminado em `_test`; nunca reutilize URLs de desenvolvimento ou migration nesse fluxo.
+- `npm run test:integration` exige o `postgres-test` já preparado, executa serialmente e nunca inicia Docker ou aplica migrations automaticamente.
 - Use variáveis de ambiente e mecanismos seguros da plataforma para configuração sensível. Arquivos locais de ambiente não devem ser versionados; disponibilize apenas exemplos sem valores reais quando necessário.
 - Dados demonstrativos devem ser claramente fictícios. Não presuma que validação no cliente substitui validação no servidor.
 

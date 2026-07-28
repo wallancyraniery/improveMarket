@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+
+// Experimental server-only import: makes Vinext process the Better Auth probe.
+import "@/src/experiments/better-auth/compatibility.server";
+
 import "./globals.css";
 
 const geistSans = Geist({

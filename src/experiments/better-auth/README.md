@@ -23,6 +23,34 @@ It contains only the four core tables: `auth_users`, `auth_sessions`,
 Their IDs are textual and remain separate from the UUID-based marketplace
 domain. No database was accessed and no migration was generated or applied.
 
+Checkpoint 3 adds a separate, IMPROVE-controlled schema proposal in
+`hardened/hardened-auth-schema.ts`. The official generated schema remains the
+immutable compatibility baseline; the hardened proposal is not generated,
+migrated, connected to PostgreSQL, or approved for production. A typed probe
+initializes Better Auth 1.6.25 with the official Drizzle adapter, an explicitly
+injected schema, and Drizzle's PostgreSQL mock only.
+
+The proposal replaces case-sensitive `unique(email)` with the unique index
+`auth_users_email_lower_unique_idx` over `lower(email)`. The application must
+continue normalizing email to lowercase; the database index is the final
+case-insensitive invariant. This checkpoint deliberately does not add trimming
+or Unicode canonicalization. It also adds
+`auth_accounts_provider_id_account_id_unique_idx`, ordered as
+`(provider_id, account_id)`, so the same external identity cannot be linked
+twice while one Better Auth user can still have accounts from Google and
+Microsoft. A future adapter workflow must safely map a concurrent uniqueness
+violation.
+
+Every temporal column uses PostgreSQL `timestamp with time zone`, preserving
+the generated schema's defaults, nullability, and `$onUpdate` behavior. The
+TypeScript relation properties are `sessions`, `accounts`, and `user`, avoiding
+the generated double-plural names without changing physical tables or columns.
+
+OAuth token columns remain nullable solely for structural adapter
+compatibility. Their presence does not authorize plaintext token storage;
+minimization and encryption require separate experiments, and plaintext
+`id_token` remains an unresolved risk. No real provider is configured.
+
 The generated relation properties `auth_sessionss` and `auth_accountss` result
 from plural custom model names receiving another plural suffix. They do not
 change physical table names, but are a maintainability concern if relational
@@ -64,10 +92,10 @@ exists. If retention is required, encrypt every token class with tested key
 rotation and minimize its lifetime. These are recommendations, not configuration
 implemented by this spike.
 
-The preferred future boundary is a domain-owned `user_auth_identities` mapping
-an internal `users.id` to the authentication system's user identity, for example
-`("better-auth", auth_users.id)`, while Google and Microsoft accounts remain
-inside `auth_accounts`. Conceptually it should have a UUID primary key, a
+The preferred future boundary is a domain-owned `user_auth_identities` mapping:
+`users.id` → `issuer = "better-auth"` → `subject = auth_users.id`, while Google
+and Microsoft accounts remain inside `auth_accounts`. Checkpoint 3 does not
+implement that table. Conceptually it should have a UUID primary key, a
 foreign key to `users`, unique `(issuer, subject)`, and an index on `user_id`.
 Multiple authentication identities per marketplace user should be allowed for
 migration, with explicit merge controls. Avoid a direct foreign key to

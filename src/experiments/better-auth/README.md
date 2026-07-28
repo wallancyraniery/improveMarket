@@ -1,0 +1,89 @@
+# Better Auth compatibility spike
+
+Analysis date: 2026-07-27. This experiment evaluates whether Better Auth
+1.6.25 can coexist with the IMPROVE application without coupling authentication
+tables to the marketplace domain. It is not production authentication code and
+must not be imported into a production runtime.
+
+## Checkpoints
+
+Checkpoint 1 proved that the minimal server-only package surface can be built,
+tested, and kept out of the client bundle and Worker artifact. Checkpoint 2
+proved that the official CLI can derive an isolated Drizzle/PostgreSQL schema
+from a mocked adapter, without a database connection:
+
+```sh
+npx auth@1.6.25 generate --config src/experiments/better-auth/schema/auth.ts --output src/experiments/better-auth/generated/auth-schema.ts --yes
+```
+
+Generated schema SHA-256:
+`28140d6e55a3397c04894f8af03fe18d41523360e47ac11df6eec8415cddf054`.
+It contains only the four core tables: `auth_users`, `auth_sessions`,
+`auth_accounts`, and `auth_verifications`; no plugin tables were generated.
+Their IDs are textual and remain separate from the UUID-based marketplace
+domain. No database was accessed and no migration was generated or applied.
+
+The generated relation properties `auth_sessionss` and `auth_accountss` result
+from plural custom model names receiving another plural suffix. They do not
+change physical table names, but are a maintainability concern if relational
+queries later use them.
+
+## Findings and unresolved production requirements
+
+- Better Auth's internal 1.6.25 paths lowercase user email with
+  `toLowerCase()`; they do not trim or perform Unicode/provider-specific
+  canonicalization. Direct adapter calls and hooks can bypass or replace this
+  behavior. The generated `unique(email)` is case-sensitive, so production
+  design still needs a database-enforced normalized-email policy.
+- OAuth lookup uses `(providerId, accountId)`, but the generated schema has no
+  unique constraint for that pair. Application checks alone do not close a
+  concurrent-link race. A database uniqueness constraint is a production
+  blocker to resolve and validate before adoption.
+- Every generated PostgreSQL timestamp is `timestamp without time zone`.
+  Drizzle serializes JavaScript `Date` values as ISO UTC and interprets returned
+  naive strings as UTC, but database/session timezone differences can make SQL
+  defaults or comparisons ambiguous. The marketplace currently uses
+  `timestamp with time zone`; alignment requires an explicit schema ownership
+  decision rather than editing this generated file by hand.
+- OAuth flows can persist access, refresh, and ID tokens when providers return
+  them. `account.encryptOAuthTokens` defaults to false. Although the option is
+  documented for OAuth tokens generally, inspected 1.6.25 paths encrypt access
+  and refresh tokens while passing `idToken` directly in several create/update
+  flows. This must be verified or mitigated before storing tokens. Versioned
+  secrets support non-destructive rotation only while prior keys remain
+  available.
+- With email/password disabled, `auth_accounts.password` remains nullable and
+  unused by the intended OAuth-only flow. `auth_verifications` may still hold
+  OAuth state when database state storage is selected; it cannot yet be assumed
+  unused.
+
+For an authentication-only MVP, request only identity scopes, disable implicit
+account linking until its policy is approved, avoid downstream-provider APIs,
+and do not retain provider tokens unless a demonstrated runtime requirement
+exists. If retention is required, encrypt every token class with tested key
+rotation and minimize its lifetime. These are recommendations, not configuration
+implemented by this spike.
+
+The preferred future boundary is a domain-owned `user_auth_identities` mapping
+an internal `users.id` to the authentication system's user identity, for example
+`("better-auth", auth_users.id)`, while Google and Microsoft accounts remain
+inside `auth_accounts`. Conceptually it should have a UUID primary key, a
+foreign key to `users`, unique `(issuer, subject)`, and an index on `user_id`.
+Multiple authentication identities per marketplace user should be allowed for
+migration, with explicit merge controls. Avoid a direct foreign key to
+`auth_users` so the same contract works with an external provider such as Clerk;
+application workflows must coordinate deletion and revocation.
+
+Still unproved: real OAuth callbacks, provider-specific claims, database SQL and
+concurrency behavior, migrations, token minimization, encryption coverage,
+secret rotation, timezone behavior against PostgreSQL, sessions, revocation,
+deletion, and the identity bridge. None may be inferred as production-ready
+from this experiment.
+
+Official references:
+
+- [Database and core schema](https://www.better-auth.com/docs/concepts/database)
+- [CLI schema generation](https://www.better-auth.com/docs/concepts/cli)
+- [Users, accounts, and account linking](https://www.better-auth.com/docs/concepts/users-accounts)
+- [Configuration options](https://www.better-auth.com/docs/reference/options)
+- [Security and secret rotation](https://www.better-auth.com/docs/reference/security)

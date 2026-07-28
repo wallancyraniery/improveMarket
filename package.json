@@ -10,7 +10,7 @@
     "dev": "cross-env WRANGLER_LOG_PATH=.wrangler/wrangler.log vite",
     "build": "vinext build && npm run validate:artifact",
     "start": "cross-env WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
-    "test": "npm run build && node --conditions=react-server --import tsx --test tests/rendered-html.test.mjs tests/better-auth-compatibility.test.ts tests/database-env.test.ts tests/test-database-env.test.ts tests/database-adapter.test.ts tests/database-schema.test.ts tests/organization-onboarding.test.ts tests/postgres-organization-onboarding-store.test.ts",
+    "test": "npm run build && node --conditions=react-server --import tsx --test tests/rendered-html.test.mjs tests/better-auth-compatibility.test.ts tests/better-auth-schema.test.ts tests/database-env.test.ts tests/test-database-env.test.ts tests/database-adapter.test.ts tests/database-schema.test.ts tests/organization-onboarding.test.ts tests/postgres-organization-onboarding-store.test.ts",
     "test:integration": "node --conditions=react-server --import tsx --test --test-concurrency=1 tests/integration/organization-onboarding-postgres.test.ts",
     "validate:artifact": "node scripts/validate-artifact.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",

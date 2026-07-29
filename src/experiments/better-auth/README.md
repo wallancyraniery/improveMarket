@@ -51,6 +51,43 @@ compatibility. Their presence does not authorize plaintext token storage;
 minimization and encryption require separate experiments, and plaintext
 `id_token` remains an unresolved risk. No real provider is configured.
 
+Checkpoint 4 uses the locally installed Drizzle Kit 0.31.10 to generate and
+statically review the PostgreSQL migration for the hardened proposal. The exact
+command was:
+
+```sh
+npx --no-install drizzle-kit generate --config src/experiments/better-auth/hardened/drizzle.config.ts --name create_hardened_better_auth_schema
+```
+
+The isolated migration is
+`hardened/drizzle/0000_create_hardened_better_auth_schema.sql`. It creates only
+the four core authentication tables, with four textual primary keys, twelve
+timezone-aware timestamp columns, the two cascading user foreign keys, session
+token uniqueness, the case-insensitive email index, the provider/account
+identity index, and the three functional lookup indexes. Its only `ALTER TABLE`
+statements add the two foreign keys; it contains no destructive SQL, DML,
+plugin or domain table, seed, extension, function, trigger, or privilege change.
+
+Generated artifact SHA-256 values:
+
+- SQL: `b0b24264973191f8aa3bb3d7fb3ac3041cdebb147765bbdfe37b65dba9d3b7f9`
+- Snapshot: `9d8930a38c64638cf3592eed55037c4ad032f7d5cffc510f7ccfa7e4470b1104`
+- Journal: `49e17c36efd613c43fe4b160aec0aa15ad564026ba4b94d06544ca6a44d4c3dc`
+
+The SQL was not applied and no database was accessed. These generated files
+remain experimental review artifacts, not a production migration. PostgreSQL
+execution, transactional behavior, concurrent uniqueness violations, rollback
+strategy, token minimization and encryption, and integration with a real OAuth
+flow remain unproved.
+
+As expected from the hardened Drizzle schema, `auth_accounts.updated_at` and
+`auth_sessions.updated_at` are required but have no SQL default; this preserves
+the Better Auth structural behavior in which the application supplies their
+values. A future adapter test must prove that every applicable insert provides
+them before this proposal can advance. The offline command
+`npx --no-install drizzle-kit check --config src/experiments/better-auth/hardened/drizzle.config.ts`
+reported that the experimental migration metadata is valid.
+
 The generated relation properties `auth_sessionss` and `auth_accountss` result
 from plural custom model names receiving another plural suffix. They do not
 change physical table names, but are a maintainability concern if relational
